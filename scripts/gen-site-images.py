@@ -48,7 +48,7 @@ def load_reference_image(reference, base_url=None):
 
 def generate_text_to_image(prompt, api_key):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {"model": "gpt-image-2", "prompt": prompt, "size": "1024x1024"}
+    payload = {"model": "gpt-image-2", "prompt": prompt, "size": "1024x1024", "quality": "low"}
     resp = requests.post(GENERATIONS_URL, headers=headers, json=payload, timeout=90)
     if resp.status_code != 200:
         raise RuntimeError(f"API error {resp.status_code}: {resp.text[:500]}")
@@ -68,6 +68,7 @@ def generate_image_to_image(prompt, reference_bytes, api_key):
         "prompt": prompt,
         "images": [{"image_url": data_uri}],
         "size": "1024x1024",
+        "quality": "low",
     }
     resp = requests.post(EDITS_URL, headers=headers, json=payload, timeout=120)
     if resp.status_code != 200:
@@ -140,7 +141,19 @@ def main():
     parser.add_argument("--api-key", help="API key (or set AIHUBMIX_API_KEY env)")
     parser.add_argument("--start-from", type=int, default=0, help="Resume from index")
     parser.add_argument("--force", action="store_true", help="Force regenerate")
+    parser.add_argument('--quality', default='low', choices=['low'],
+                       help='QUALITY IS LOCKED TO LOW. medium/high BLOCKED to prevent cost spikes.')
     args = parser.parse_args()
+
+    # ═══════════════════════════════════════════════════════════════
+    # QUALITY GUARD — only "low" permitted. $0.006/image.
+    # ═══════════════════════════════════════════════════════════════
+    if args.quality != 'low':
+        print("=" * 60)
+        print("⛔ QUALITY BLOCKED: --quality={}".format(args.quality))
+        print("   Only 'low' ($0.006/image) is permitted.")
+        print("=" * 60)
+        sys.exit(1)
 
     api_key = load_api_key(args.api_key)
     if not api_key:

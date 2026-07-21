@@ -410,6 +410,7 @@ python skills/ai-image-gen/scripts/gen-image.py --prompts supplement.json --out 
 ```
 
 > **注意**：quality 写死 `low`，无 `--quality` 参数。已实测 low 和 high 无肉眼可见区别，差价 35 倍。
+> ⛔ 脚本内置 quality guard：传入 high/medium 直接退出。
 ```
 
 ### 图生图模式（Image-to-Image）

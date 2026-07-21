@@ -99,6 +99,7 @@ def generate_one_shot(prompt, reference_bytes, api_key):
         "prompt": prompt,
         "images": [{"image_url": data_uri}],
         "size": "1024x1024",
+        "quality": "low",
     }
     resp = requests.post(EDITS_URL, headers=headers, json=payload, timeout=120)
     if resp.status_code != 200:
@@ -274,8 +275,20 @@ def main():
 
     # List presets
     parser.add_argument("--list-presets", action="store_true", help="Show available angle/scene/lighting presets")
+    parser.add_argument('--quality', default='low', choices=['low'],
+                       help='QUALITY IS LOCKED TO LOW. $0.006/image.')
 
     args = parser.parse_args()
+
+    # ═══════════════════════════════════════════════════════════════
+    # QUALITY GUARD — only "low" permitted.
+    # ═══════════════════════════════════════════════════════════════
+    if args.quality != 'low':
+        print("=" * 60)
+        print("⛔ QUALITY BLOCKED: --quality={}".format(args.quality))
+        print("   Only 'low' ($0.006/image) is permitted.")
+        print("=" * 60)
+        sys.exit(1)
 
     if args.list_presets:
         print("Angle presets:", ", ".join(ANGLE_TEMPLATES.keys()))
